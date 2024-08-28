@@ -159,14 +159,14 @@ def format_remaining_time(remaining_minutes):
     minutes = remainder
     return f"{days:02}:{hours:02}:{minutes:02}:00"
 
-def calculate_progress(item_name, remaining_time):
+def calculate_progress(item_name, remaining_minutes):
     for item in table_data:
         if item["NOM"] == item_name:
-            total_time = convert_time_to_minutes(item["Durée HH:MM:SS"])
-            elapsed_time = total_time - remaining_time
-            progress = max(0, min(100, (elapsed_time / total_time) * 100))
-            return round(progress, 2)
-    return None
+            total_minutes = convert_time_to_minutes(item["Durée HH:MM:SS"])
+            if total_minutes > 0:  # Prévenir la division par zéro
+                progress = ((total_minutes - remaining_minutes) / total_minutes) * 100
+                return round(progress, 2)  # Retourne le pourcentage arrondi à deux décimales
+    return None  # Retourne None si l'item n'est pas trouvé
 
 def scrape_data():
     global cached_data
@@ -196,7 +196,7 @@ def scrape_data():
                     data.append({
                         "item_name": item_name,
                         "remaining_time": remaining_time_formatted,
-                        "progress": f'{progress}%'
+                        "progress": progress
                     })
             else:
                 print(f"Erreur lors de l'accès à la page : {response.status_code}")
