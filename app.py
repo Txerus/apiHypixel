@@ -10,11 +10,11 @@ app = Flask(__name__)
 cached_data = []
 
 def parse_text_and_time(text):
-    # Utiliser des expressions régulières pour séparer le nom et le temps
-    match = re.match(r"^(.*?)\s+-\s+coming in\s+(\d+)\s+hours$", text.strip(), re.IGNORECASE)
+    # Utiliser des expressions régulières pour extraire le nom et le temps restant
+    match = re.match(r"^(.*?)-\s+(?:ending|coming) in\s+(\d+)\s+hours$", text.strip(), re.IGNORECASE)
     if match:
-        name = match.group(1).strip()
-        hours = int(match.group(2))
+        name = match.group(1).strip()  # Le nom de l'élément
+        hours = int(match.group(2))  # Le nombre d'heures
         # Convertir les heures en format HH:MM:SS
         time_str = f"{hours:02d}:00:00"
         return name, time_str
