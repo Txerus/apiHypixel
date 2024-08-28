@@ -4,39 +4,56 @@ from bs4 import BeautifulSoup
 import schedule
 import threading
 import time
+import re
 
 app = Flask(__name__)
 cached_data = []
+
+def parse_text_and_time(text):
+    # Utiliser des expressions régulières pour séparer le nom et le temps
+    match = re.match(r"^(.*?)\s+-\s+coming in\s+(\d+)\s+hours$", text.strip(), re.IGNORECASE)
+    if match:
+        name = match.group(1).strip()
+        hours = int(match.group(2))
+        # Convertir les heures en format HH:MM:SS
+        time_str = f"{hours:02d}:00:00"
+        return name, time_str
+    else:
+        return text.strip(), None
 
 def scrape_data():
     global cached_data
     
     try:
-        # Liste des URL à scraper
-        urls = [
-            "https://sky.shiiyu.moe/stats/TOLOSA_TXERUS/Pomegranate#Skills",
-            "https://sky.shiiyu.moe/stats/Daninho31/Pomegranate#Skills"
-        ]
+        # Envoyer une requête GET à la page cible
+        response = requests.get("https://sky.shiiyu.moe/stats/TOLOSA_TXERUS/Pomegranate#Skills")
         
-        combined_data = []
-        
-        for url in urls:
-            response = requests.get(url)
+        # Vérifier si la requête a réussi
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
             
-            if response.status_code == 200:
-                soup = BeautifulSoup(response.text, 'html.parser')
+            # Remplacez ceci par la manière correcte de sélectionner les éléments que vous souhaitez récupérer
+            forge_items = soup.find_all(class_="forge-item")
+            
+            data = []
+            for item in forge_items:
+                slot_text = item.find(class_="forge-slot").get_text()
+                info_text = item.find(class_="stat-value").get_text()
                 
-                # Remplacez ceci par la manière correcte de sélectionner les éléments que vous souhaitez récupérer
-                forge_items = soup.find_all(class_="forge-item")
+                # Extraire le nom et le temps depuis le texte récupéré
+                slot_name, slot_time = parse_text_and_time(slot_text)
+                info_name, info_time = parse_text_and_time(info_text)
                 
-                for item in forge_items:
-                    slot = item.find(class_="forge-slot").get_text()
-                    info = item.find(class_="stat-value").get_text()
-                    combined_data.append({"slot": slot, "info": info, "url": url})
-            else:
-                print(f"Erreur lors de l'accès à la page {url} : {response.status_code}")
-        
-        cached_data = combined_data
+                data.append({
+                    "slot_name": slot_name,
+                    "slot_time": slot_time,
+                    "info_name": info_name,
+                    "info_time": info_time
+                })
+            
+            cached_data = data
+        else:
+            print(f"Erreur lors de l'accès à la page : {response.status_code}")
 
     except Exception as e:
         print(f"Erreur lors du scraping des données : {e}")
