@@ -19,37 +19,44 @@ def parse_text_and_time(text):
         time_str = f"{hours:02d}:00:00"
         return name, time_str
     else:
-        return text.strip(), None
+        return text.strip(), "terminé"  # Si pas d'heure, retourne "terminé"
 
 def scrape_data():
     global cached_data
     
+    urls = [
+        "https://sky.shiiyu.moe/stats/TOLOSA_TXERUS/Pomegranate#Skills",
+        "https://sky.shiiyu.moe/stats/Daninho31/Pomegranate#Skills"
+    ]
+    
+    data = []
+
     try:
-        # Envoyer une requête GET à la page cible
-        response = requests.get("https://sky.shiiyu.moe/stats/TOLOSA_TXERUS/Pomegranate#Skills")
-        
-        # Vérifier si la requête a réussi
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.text, 'html.parser')
+        for url in urls:
+            # Envoyer une requête GET à la page cible
+            response = requests.get(url)
             
-            # Sélection des éléments de la forge
-            forge_items = soup.find_all(class_="forge-item")
-            
-            data = []
-            for item in forge_items:
-                info_text = item.find(class_="stat-value").get_text()
+            # Vérifier si la requête a réussi
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
                 
-                # Extraire le nom et l'heure depuis le texte récupéré
-                info_name, info_time = parse_text_and_time(info_text)
+                # Sélection des éléments de la forge
+                forge_items = soup.find_all(class_="forge-item")
                 
-                data.append({
-                    "info_name": info_name,
-                    "info_time": info_time
-                })
-            
-            cached_data = data
-        else:
-            print(f"Erreur lors de l'accès à la page : {response.status_code}")
+                for item in forge_items:
+                    info_text = item.find(class_="stat-value").get_text()
+                    
+                    # Extraire le nom et l'heure depuis le texte récupéré
+                    info_name, info_time = parse_text_and_time(info_text)
+                    
+                    data.append({
+                        "info_name": info_name,
+                        "info_time": info_time
+                    })
+            else:
+                print(f"Erreur lors de l'accès à la page : {response.status_code}")
+
+        cached_data = data
 
     except Exception as e:
         print(f"Erreur lors du scraping des données : {e}")
