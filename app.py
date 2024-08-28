@@ -32,21 +32,17 @@ def scrape_data():
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Remplacez ceci par la manière correcte de sélectionner les éléments que vous souhaitez récupérer
+            # Sélection des éléments de la forge
             forge_items = soup.find_all(class_="forge-item")
             
             data = []
             for item in forge_items:
-                slot_text = item.find(class_="forge-slot").get_text()
                 info_text = item.find(class_="stat-value").get_text()
                 
-                # Extraire le nom et le temps depuis le texte récupéré
-                slot_name, slot_time = parse_text_and_time(slot_text)
+                # Extraire le nom et l'heure depuis le texte récupéré
                 info_name, info_time = parse_text_and_time(info_text)
                 
                 data.append({
-                    "slot_name": slot_name,
-                    "slot_time": slot_time,
                     "info_name": info_name,
                     "info_time": info_time
                 })
