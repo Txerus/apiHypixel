@@ -20,12 +20,20 @@ table_data = [
 ]
 
 def parse_text_and_time(text):
-    match = re.match(r"^(.*?)-\s+(?:ending|coming) in\s+(\d+)\s+hours$", text.strip(), re.IGNORECASE)
+    # Adapter la regex pour capturer les minutes ainsi que les heures
+    match = re.match(r"^(.*?)-\s+(?:ending|coming) in\s+(\d+)\s+(hours|minutes)$", text.strip(), re.IGNORECASE)
     
     if match:
         name = match.group(1).strip()
-        hours = int(match.group(2))
-        return name, hours * 60  # Convert hours to minutes
+        value = int(match.group(2))
+        unit = match.group(3).lower()
+        
+        # Conversion en minutes
+        if unit == 'hours':
+            return name, value * 60  # Convertir les heures en minutes
+        elif unit == 'minutes':
+            return name, value  # Les minutes sont déjà en minutes
+        
     else:
         if '-' in text:
             name = text.split('-')[0].strip()
