@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   IPA_URL: https://tmpfiles.org/dl/wvwmrwFYUnbg/ultimateskyblockmarket-v2.1.ipa
@@ -27,9 +27,20 @@ jobs:
           echo "$IPA_SHA256  UltimateSkyBlockMarket-V2.1.ipa" | sha256sum -c -
           ls -lh UltimateSkyBlockMarket-V2.1.ipa
       - name: Upload temporary artifact
+        id: upload
         uses: actions/upload-artifact@v4
         with:
           name: UltimateSkyBlockMarket-V2.1-direct
           path: UltimateSkyBlockMarket-V2.1.ipa
           if-no-files-found: error
           retention-days: 1
+      - name: Persist run ID and status
+        if: always()
+        shell: bash
+        run: |
+          printf 'run_id=%s\njob_status=%s\n' "$GITHUB_RUN_ID" "${{ job.status }}" > ipa-artifact-run.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ipa-artifact-run.txt
+          git commit -m 'Store temporary IPA artifact run [skip ci]' || true
+          git push origin HEAD:main
