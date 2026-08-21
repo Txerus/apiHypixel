@@ -1,0 +1,35 @@
+name: Temporary V2.1 IPA artifact transfer
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ipa-import-artifact.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  IPA_URL: https://tmpfiles.org/dl/wvwmrwFYUnbg/ultimateskyblockmarket-v2.1.ipa
+  IPA_SHA256: 60c2c2ff097a0622119fb468ac7eeeb223e56e111492a3dc204d33dfd06bf553
+
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download verified IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --retry 3 --retry-delay 2 -fL "$IPA_URL" -o UltimateSkyBlockMarket-V2.1.ipa
+          echo "$IPA_SHA256  UltimateSkyBlockMarket-V2.1.ipa" | sha256sum -c -
+          ls -lh UltimateSkyBlockMarket-V2.1.ipa
+      - name: Upload temporary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: UltimateSkyBlockMarket-V2.1-direct
+          path: UltimateSkyBlockMarket-V2.1.ipa
+          if-no-files-found: error
+          retention-days: 1
